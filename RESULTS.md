@@ -11,7 +11,7 @@
 | Validation hardware | CPU; NVIDIA RTX 4050 available locally but CUDA PyTorch was not installed for these runs |
 | Software | Python 3.12.10; PyTorch 2.15.0 CPU; Transformers 4.50.3; Datasets 2.21.0; Jiwer 4.0.0 |
 | Term list | [`terms.txt`](terms.txt), SHA-256 `7b4ea73fdafa4c82cc83f63084e20c3ac33a077a3f4d7546b5200f3ad66880e6` |
-| Code commit | Recorded in each local `metrics.json`; results below must be regenerated after the current code is committed |
+| Code commit | `5064084f26ec553d205b36175508de3e7347a411`; both validation evaluations recorded `code_dirty: false` |
 
 See [data audit](docs/DATA_AUDIT.md) for measured channel, duration, and validity checks on train and validation audio. The original Kaggle audio redistribution terms remain unverified; no source audio, transcripts, predictions, or checkpoints are included in this repository.
 
@@ -32,9 +32,9 @@ With the pinned dataset and model available in the local Hugging Face cache, run
 
 ```powershell
 python -m medspeech.prepare --out runs/split_manifest.json
-python -m medspeech.evaluate --manifest runs/split_manifest.json --split validation --model openai/whisper-tiny.en --revision 87c7102498dcde7456f24cfd30239ca606ed9063 --out runs/baseline_validation
-python -m medspeech.evaluate --manifest runs/split_manifest.json --split validation --model openai/whisper-tiny.en --revision 87c7102498dcde7456f24cfd30239ca606ed9063 --snr-db 10 --noise-seed 42 --out runs/baseline_validation_10db
-python -m medspeech.compare --baseline runs/baseline_validation/predictions.jsonl --candidate runs/baseline_validation_10db/predictions.jsonl --samples 1000 --seed 42 --out runs/clean_vs_10db_validation.json
+python -m medspeech.evaluate --manifest runs/split_manifest.json --split validation --model openai/whisper-tiny.en --revision 87c7102498dcde7456f24cfd30239ca606ed9063 --out runs/baseline_validation_clean_commit
+python -m medspeech.evaluate --manifest runs/split_manifest.json --split validation --model openai/whisper-tiny.en --revision 87c7102498dcde7456f24cfd30239ca606ed9063 --snr-db 10 --noise-seed 42 --out runs/baseline_validation_10db_clean_commit
+python -m medspeech.compare --baseline runs/baseline_validation_clean_commit/predictions.jsonl --candidate runs/baseline_validation_10db_clean_commit/predictions.jsonl --samples 1000 --seed 42 --out runs/clean_vs_10db_validation_clean_commit.json
 ```
 
 Each evaluation directory is ignored by Git and contains `predictions.jsonl` and `metrics.json`. `metrics.json` records model and dataset revisions, software versions, hardware, elapsed time, noise settings, term-list hash, commit, and whether the worktree was dirty.
