@@ -39,6 +39,7 @@ h2,h3,p{margin-top:0}
 .button:hover:not(:disabled){transform:translateY(-1px)}
 .button:active:not(:disabled){transform:translateY(0)}
 .button-primary{background:var(--teal);color:white}.button-primary:hover{background:var(--teal-dark)}
+.button-primary:focus-within{outline:3px solid #4ca7a1;outline-offset:3px}
 .button-secondary{background:white;border-color:#c8d8d5;color:var(--ink)}.button-secondary:hover{background:#f0f6f4}
 .button-dark{background:var(--ink);color:white;min-width:162px}.button-dark:hover:not(:disabled){background:#28434b}
 .button:disabled{opacity:.45;cursor:not-allowed}

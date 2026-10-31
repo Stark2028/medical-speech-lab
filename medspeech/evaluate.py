@@ -14,6 +14,21 @@ from .audio import add_gaussian_noise, mono_16k
 from .metrics import score
 
 
+def hash_model_artifact(path: Path) -> str:
+    """Hash every file in a local checkpoint, including config and tokenizer."""
+    digest = hashlib.sha256()
+    files = sorted(file for file in path.rglob("*") if file.is_file())
+    if not files:
+        raise ValueError(f"No checkpoint files found in {path}")
+    for file in files:
+        digest.update(file.relative_to(path).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        with file.open("rb") as source:
+            for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                digest.update(chunk)
+    return digest.hexdigest()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, required=True)
@@ -55,7 +70,8 @@ def main() -> None:
         raise RuntimeError("Dataset changed since manifest creation; regenerate and rerun all experiments")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_revision = None
-    if Path(args.model).exists():
+    local_model = Path(args.model).exists()
+    if local_model:
         if args.revision:
             parser.error("--revision applies only to Hub models")
     else:
@@ -95,8 +111,11 @@ def main() -> None:
              if line.strip() and not line.startswith("#")]
     metrics = score(references, predictions, terms)
     metrics.update({"model": args.model, "model_revision": model_revision,
+                    "model_artifact_sha256": hash_model_artifact(Path(args.model))
+                    if local_model else None,
                     "dataset": manifest["dataset_id"],
                     "dataset_revision": manifest["dataset_revision"],
+                    "manifest_sha256": hashlib.sha256(args.manifest.read_bytes()).hexdigest(),
                     "split": args.split,
                     "device": torch.cuda.get_device_name(0) if device.type == "cuda" else "CPU",
                     "elapsed_seconds": round(time.perf_counter() - start, 2),

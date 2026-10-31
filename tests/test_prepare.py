@@ -33,11 +33,8 @@ class PrepareTests(unittest.TestCase):
 
         datasets = types.ModuleType("datasets")
         datasets.load_dataset = load_dataset
-        hub = types.ModuleType("huggingface_hub")
-        hub.HfApi = lambda: types.SimpleNamespace(
-            dataset_info=lambda _dataset_id: types.SimpleNamespace(sha="fixed-sha"))
-        with patch.dict(sys.modules, {"datasets": datasets, "huggingface_hub": hub}):
-            manifest = build_manifest("owner/data")
+        with patch.dict(sys.modules, {"datasets": datasets}):
+            manifest = build_manifest("owner/data", "fixed-sha")
 
         self.assertEqual(calls, [("owner/data", "fixed-sha")])
         self.assertEqual(manifest["dataset_revision"], "fixed-sha")

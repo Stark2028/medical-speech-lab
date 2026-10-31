@@ -8,6 +8,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 RUN groupadd --system app && useradd --system --gid app --home /app app
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 libsndfile1 \
+    && rm -rf /var/lib/apt/lists/*
 COPY requirements-api.txt .
 RUN pip install --no-cache-dir torch==2.12.0 --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements-api.txt

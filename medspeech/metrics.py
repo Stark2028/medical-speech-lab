@@ -26,5 +26,6 @@ def score(references: list[str], predictions: list[str], terms: list[str] | None
                     present += 1
                     retained += bool(re.search(pattern, pred))
         result["term_occurrences"] = present
+        result["term_retained"] = retained
         result["term_recall"] = retained / present if present else None
     return result

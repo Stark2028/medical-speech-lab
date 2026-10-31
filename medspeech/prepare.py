@@ -10,13 +10,15 @@ from pathlib import Path
 from .protocol import normalize_text, partition, verify_no_text_overlap
 
 DATASET_ID = "Hani89/medical_asr_recording_dataset"
+DATASET_REVISION = "8b2b2bd4233140705f1f7bb48411b49cd188d89c"
 
 
-def build_manifest(dataset_id: str = DATASET_ID) -> dict:
+def build_manifest(dataset_id: str = DATASET_ID,
+                   revision: str = DATASET_REVISION) -> dict:
     from datasets import load_dataset
-    from huggingface_hub import HfApi
 
-    revision = HfApi().dataset_info(dataset_id).sha
+    if not revision:
+        raise ValueError("A pinned dataset revision is required")
     dataset = load_dataset(dataset_id, revision=revision)
     rows = []
     for source_split, subset in dataset.items():
@@ -32,7 +34,7 @@ def build_manifest(dataset_id: str = DATASET_ID) -> dict:
               for name in ("train", "validation", "test")}
     if any(counts[name] == 0 for name in groups):
         raise ValueError("A partition is empty; inspect the dataset before continuing")
-    # Manifest stores only indices and hashes to avoid duplicating source text.
+    # Manifest stores only row indices and source fingerprints, not transcript text.
     selected = [{"source_split": row["source_split"], "index": row["index"],
                  "partition": row["partition"]} for row in rows]
     return {"dataset_id": dataset_id,
@@ -45,8 +47,12 @@ def build_manifest(dataset_id: str = DATASET_ID) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--dataset-id", default=DATASET_ID)
+    parser.add_argument("--revision", default=DATASET_REVISION)
     args = parser.parse_args()
-    manifest = build_manifest()
+    if args.out.exists():
+        parser.error("Output file already exists; choose a new manifest path")
+    manifest = build_manifest(args.dataset_id, args.revision)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     print(f"Saved {len(manifest['rows'])} rows: {manifest['counts']}")

@@ -10,6 +10,7 @@ import io
 import math
 import os
 import time
+from collections import OrderedDict, deque
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -24,6 +25,7 @@ MODEL_REVISION = os.getenv(
 )
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 MAX_DURATION_SECONDS = 30.0
+MAX_REQUESTS_PER_MINUTE = 12
 WEB_DIR = Path(__file__).resolve().parents[1] / "web"
 
 
@@ -93,12 +95,38 @@ class WhisperEngine:
         return self.processor.batch_decode(tokens, skip_special_tokens=True)[0].strip()
 
 
+class RateLimiter:
+    """Bounded, per-IP limiter for this single-worker public demo."""
+
+    def __init__(self, limit: int = MAX_REQUESTS_PER_MINUTE, window: float = 60.0):
+        self.limit = limit
+        self.window = window
+        self.hits: OrderedDict[str, deque[float]] = OrderedDict()
+
+    def allow(self, client: str, now: float) -> bool:
+        events = self.hits.get(client)
+        if events is None:
+            if len(self.hits) >= 2048:
+                self.hits.popitem(last=False)
+            events = deque()
+            self.hits[client] = events
+        else:
+            self.hits.move_to_end(client)
+        while events and events[0] <= now - self.window:
+            events.popleft()
+        if len(events) >= self.limit:
+            return False
+        events.append(now)
+        return True
+
+
 def create_app(engine: WhisperEngine | None = None):
     """Create an app with an injectable engine for offline API tests."""
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         app.state.engine = engine if engine is not None else WhisperEngine()
         app.state.inference_slot = asyncio.Semaphore(1)
+        app.state.rate_limiter = RateLimiter()
         yield
         app.state.engine = None
 
@@ -142,6 +170,13 @@ def create_app(engine: WhisperEngine | None = None):
         claimed_size = request.headers.get("content-length")
         if claimed_size and claimed_size.isdigit() and int(claimed_size) > MAX_UPLOAD_BYTES:
             raise HTTPException(status_code=413, detail="Audio exceeds the 8 MB limit.")
+        forwarded = request.headers.get("x-forwarded-for", "")
+        client_ip = forwarded.split(",")[0].strip() if forwarded else (
+            request.client.host if request.client else "unknown")
+        if not request.app.state.rate_limiter.allow(client_ip, time.monotonic()):
+            raise HTTPException(status_code=429,
+                                detail="Request limit reached. Try again in one minute.",
+                                headers={"Retry-After": "60"})
         chunks, total = [], 0
         async for chunk in request.stream():
             total += len(chunk)
@@ -169,6 +204,7 @@ def create_app(engine: WhisperEngine | None = None):
             "duration_seconds": round(duration, 2),
             "processing_seconds": round(time.perf_counter() - started, 2),
             "model": current.model_id,
+            "model_revision": current.revision,
             "research_only": True,
         }
 
