@@ -1,0 +1,35 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1600m
+    cpus: 2
+    expose:
+      - "8000"
+
+  caddy:
+    image: caddy:2.10
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      SITE_HOST: ${SITE_HOST:?Set SITE_HOST in deploy/.env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

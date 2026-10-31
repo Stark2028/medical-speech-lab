@@ -1,0 +1,13 @@
+.git
+.venv
+.cache
+.tmp
+__pycache__
+*.pyc
+data
+runs
+checkpoints
+tests
+docs
+*.tex
+.env

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6f4">
+  <meta name="description" content="A reproducible research demo for short English medical-symptom speech transcription.">
+  <title>Medical Speech Lab</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <script src="/assets/app.js" defer></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Medical Speech Lab home">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span>
+        <span>Medical Speech Lab</span>
+      </a>
+      <a class="header-link" href="https://github.com/Stark2028/medical-speech-lab" target="_blank" rel="noopener noreferrer">View source <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div class="intro-copy">
+          <h1 id="page-title">Hear the words.<br><span>Inspect the limits.</span></h1>
+          <p>Try a short English symptom description with a pinned Whisper baseline. The transcript appears here; your audio is processed in memory and is not saved by this demo.</p>
+          <div class="model-line"><span class="status-dot" aria-hidden="true"></span><span id="model-label">Loading model details…</span></div>
+        </div>
+        <div class="scope-note" aria-label="Research scope">
+          <strong>Research demo</strong>
+          <p>These recordings are not clinical conversations. The output can be wrong, including on important medical words. Do not use it for care or documentation.</p>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="Transcription workspace">
+        <div class="workspace-heading">
+          <div>
+            <h2>Transcribe a recording</h2>
+            <p>Up to 30 seconds. We convert supported audio to mono 16 kHz WAV in your browser.</p>
+          </div>
+          <span class="step-label">English · short form</span>
+        </div>
+
+        <div id="drop-zone" class="upload-zone">
+          <svg class="upload-icon" width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true"><path d="M15 20V5m0 0-5 5m5-5 5 5M6 19v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h3 id="upload-title">Drop audio here, or choose a file</h3>
+          <p id="file-description">WAV, MP3, M4A, or another format your browser can decode.</p>
+          <div class="upload-actions">
+            <label class="button button-primary" for="audio-file">Choose audio<input id="audio-file" type="file" accept="audio/*,.wav,.mp3,.m4a" class="visually-hidden"></label>
+            <button id="record-button" class="button button-secondary" type="button">Record with mic</button>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <p id="status" role="status" aria-live="polite">Select a file or record a short clip to begin.</p>
+          <button id="transcribe-button" class="button button-dark" type="button" disabled>Transcribe audio <span aria-hidden="true">→</span></button>
+        </div>
+        <p id="error" class="error-message" role="alert" hidden></p>
+
+        <div class="result" aria-labelledby="result-title">
+          <div class="result-head">
+            <div>
+              <h3 id="result-title">Transcript</h3>
+              <p id="result-meta">Your transcription will appear here.</p>
+            </div>
+            <button id="copy-button" class="text-button" type="button" disabled>Copy text</button>
+          </div>
+          <p id="transcript" class="transcript empty">No transcript yet.</p>
+        </div>
+      </section>
+
+      <section class="evidence" aria-labelledby="evidence-title">
+        <div class="evidence-heading">
+          <h2 id="evidence-title">What the benchmark says</h2>
+          <p>Measured on a transcript-disjoint validation partition, not on real clinical encounters.</p>
+        </div>
+        <div class="evidence-grid">
+          <div class="evidence-item"><span class="evidence-value">17.01%</span><span class="evidence-label">Clean audio word error rate</span></div>
+          <div class="evidence-item"><span class="evidence-value">32.17%</span><span class="evidence-label">Word error rate with 10 dB synthetic white noise</span></div>
+          <div class="evidence-item"><span class="evidence-value">649</span><span class="evidence-label">Validation clips across 65 unique phrases</span></div>
+        </div>
+        <p class="evidence-foot">The model shown is the pretrained baseline. Fine-tuning and final test results are still pending. <a href="https://github.com/Stark2028/medical-speech-lab/blob/main/RESULTS.md" target="_blank" rel="noopener noreferrer">Read the full methodology and results</a>.</p>
+      </section>
+    </main>
+
+    <footer class="site-footer"><span>Medical Speech Lab · Reproducible ASR research</span><span>Research only · No patient data</span></footer>
+  </div>
+</body>
+</html>

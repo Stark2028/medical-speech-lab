@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Dedicated HTTPS EC2 host for the public Medical Speech Lab research demo
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  SubnetId:
+    Type: AWS::EC2::Subnet::Id
+  InstanceType:
+    Type: String
+    Default: t3.medium
+    AllowedValues: [t3.small, t3.medium]
+  RepoUrl:
+    Type: String
+    Default: https://github.com/Stark2028/medical-speech-lab.git
+  LatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+
+Resources:
+  HostRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  HostProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref HostRole]
+
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: HTTPS and HTTP only for Medical Speech Lab
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  PublicIp:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  Host:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref SubnetId
+      SecurityGroupIds: [!Ref WebSecurityGroup]
+      IamInstanceProfile: !Ref HostProfile
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: required
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 30
+            VolumeType: gp3
+            Encrypted: true
+            DeleteOnTermination: true
+      Tags:
+        - Key: Name
+          Value: medical-speech-lab-demo
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euxo pipefail
+          dnf install -y docker git curl
+          systemctl enable --now docker
+          mkdir -p /usr/local/lib/docker/cli-plugins
+          curl -fSL https://github.com/docker/compose/releases/download/v5.6.1/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+          echo '47737f4236e6d3ccea7291995203f8f018058783b4c3a9469119811a0b5db8add96edc5b32bf8d598438be75840  /usr/local/lib/docker/cli-plugins/docker-compose' | sha256sum -c -
+          chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+          git clone --depth 1 ${RepoUrl} /opt/medical-speech-lab
+          printf 'SITE_HOST=medical-speech-lab.${PublicIp}.sslip.io\n' > /opt/medical-speech-lab/deploy/.env
+          cd /opt/medical-speech-lab/deploy
+          docker compose up -d --build
+
+  PublicIpAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref Host
+      AllocationId: !GetAtt PublicIp.AllocationId
+
+Outputs:
+  DemoUrl:
+    Description: HTTPS URL after the first image build and certificate issuance
+    Value: !Sub https://medical-speech-lab.${PublicIp}.sslip.io
+  InstanceId:
+    Value: !Ref Host
+  ElasticIp:
+    Value: !Ref PublicIp
