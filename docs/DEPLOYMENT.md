@@ -12,7 +12,7 @@ python -m pip install -r requirements-api.txt
 uvicorn medspeech.service:app --host 127.0.0.1 --port 8000
 ```
 
-Open <http://127.0.0.1:8000>. `/health/ready` is healthy only after the model loads. The same-origin API accepts a raw WAV request body at `POST /api/v1/transcribe` with `Content-Type: audio/wav`; it returns JSON. Uploaded files are limited to 8 MB and 30 seconds; the model handles one request at a time and returns HTTP 429 when busy.
+Open <http://127.0.0.1:8000>. `/health/ready` is healthy only after the model loads. The same-origin API accepts a raw WAV request body at `POST /api/v1/transcribe` with `Content-Type: audio/wav`; it returns JSON. Uploaded files are limited to 8 MB and 30 seconds; the model handles one request at a time. Concurrent requests and requests beyond 12 per IP per minute return HTTP 429. The in-process limiter assumes one API worker and Caddy as the sole public entry point.
 
 ## Docker Compose
 
@@ -57,4 +57,4 @@ aws cloudformation delete-stack --region ap-south-1 --stack-name medical-speech-
 
 ## Operational scope
 
-The live demo is intended for low traffic and public, non-sensitive recordings. It has process-level concurrency control and no queue, account system, audit logs, data retention, SLA, or clinical validation. Do not submit patient information. Clinical deployment would require a separate privacy, security, quality, and regulatory review.
+The live demo is intended for low traffic and public, non-sensitive recordings. It has process-level concurrency control and a per-IP rate limit, with no queue, account system, audit logs, data retention, SLA, or clinical validation. Do not submit patient information. Clinical deployment would require a separate privacy, security, quality, and regulatory review.

@@ -73,14 +73,14 @@
       <section class="evidence" aria-labelledby="evidence-title">
         <div class="evidence-heading">
           <h2 id="evidence-title">What the benchmark says</h2>
-          <p>Measured on a transcript-disjoint validation partition, not on real clinical encounters.</p>
+          <p>Measured on 557 held-out, transcript-disjoint clips; this is not a clinical benchmark.</p>
         </div>
         <div class="evidence-grid">
-          <div class="evidence-item"><span class="evidence-value">17.01%</span><span class="evidence-label">Clean audio word error rate</span></div>
-          <div class="evidence-item"><span class="evidence-value">32.17%</span><span class="evidence-label">Word error rate with 10 dB synthetic white noise</span></div>
-          <div class="evidence-item"><span class="evidence-value">649</span><span class="evidence-label">Validation clips across 65 unique phrases</span></div>
+          <div class="evidence-item"><span class="evidence-value">19.63%</span><span class="evidence-label">Pretrained baseline test word error rate</span></div>
+          <div class="evidence-item"><span class="evidence-value">12.60%</span><span class="evidence-label">Fine-tuned model test word error rate</span></div>
+          <div class="evidence-item"><span class="evidence-value">557</span><span class="evidence-label">Held-out clips across 59 unique phrases</span></div>
         </div>
-        <p class="evidence-foot">The model shown is the pretrained baseline. Fine-tuning and final test results are still pending. <a href="https://github.com/Stark2028/medical-speech-lab/blob/main/RESULTS.md" target="_blank" rel="noopener noreferrer">Read the full methodology and results</a>.</p>
+        <p class="evidence-foot">This demo serves the pretrained baseline; the fine-tuned checkpoint was evaluated locally and is not deployed. <a href="https://github.com/Stark2028/medical-speech-lab/blob/main/RESULTS.md" target="_blank" rel="noopener noreferrer">Read the full methodology and results</a>.</p>
       </section>
     </main>
 
