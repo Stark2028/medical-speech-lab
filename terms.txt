@@ -1,0 +1,21 @@
+# Small, fixed symptom vocabulary for exact-match recall. Expand only before final test evaluation.
+headache
+migraine
+dizziness
+fever
+cough
+nausea
+vomiting
+diarrhea
+chest pain
+shortness of breath
+back pain
+knee pain
+stomach pain
+sore throat
+fatigue
+weakness
+swelling
+bleeding
+rash
+palpitations

@@ -1,0 +1,14 @@
+.venv/
+.tmp/
+__pycache__/
+*.pyc
+.cache/
+.env
+.env.*
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+wandb/
+runs/
+data/
+checkpoints/
