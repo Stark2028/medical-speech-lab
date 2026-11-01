@@ -55,6 +55,22 @@ To stop charges and remove the demo:
 aws cloudformation delete-stack --region ap-south-1 --stack-name medical-speech-lab-demo
 ```
 
+## Shared SagaAgent EC2 host
+
+The selected live deployment uses the existing `saga-agent-demo` EC2 instance (`i-038a14281fb8c141c`) and its Caddy proxy. [`shared-compose.yaml`](../deploy/shared-compose.yaml) starts only the speech API on the existing `saga-agent_default` Docker network. It publishes no host ports. The [Caddy site block](../deploy/shared-Caddyfile.block) adds `medical-speech-lab.65.0.103.235.sslip.io` to the existing proxy configuration. The SagaAgent site block is retained.
+
+On the host, clone this repository to `/opt/medical-speech-lab` and pin the intended commit. Check `docker compose -f deploy/shared-compose.yaml config`, then build and start:
+
+```bash
+cd /opt/medical-speech-lab
+docker compose -f deploy/shared-compose.yaml up -d --build
+docker compose -f deploy/shared-compose.yaml ps
+```
+
+Back up `/opt/saga/deploy/aws/Caddyfile` before appending the new site block. Validate with `docker exec saga-agent-proxy-1 caddy validate --config /etc/caddy/Caddyfile`, then reload with `docker exec saga-agent-proxy-1 caddy reload --config /etc/caddy/Caddyfile`. Verify both the new hostname and the existing SagaAgent hostname after reload. A 2 GB EBS-backed swapfile can protect the 2 GB instance from build-time memory pressure; monitor `docker stats` and `free -m`. The shared API is capped at 900 MB and one CPU. Building the image may temporarily consume CPU and disk.
+
+To remove only this demo, remove the new site block from Caddyfile, validate and reload Caddy, then run `docker compose -f deploy/shared-compose.yaml down` in this repository. This keeps SagaAgent and the EC2 instance running. Keep the Caddyfile backup until both sites are healthy.
+
 ## Operational scope
 
 The live demo is intended for low traffic and public, non-sensitive recordings. It has process-level concurrency control and a per-IP rate limit, with no queue, account system, audit logs, data retention, SLA, or clinical validation. Do not submit patient information. Clinical deployment would require a separate privacy, security, quality, and regulatory review.

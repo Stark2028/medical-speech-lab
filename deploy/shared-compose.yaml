@@ -1,0 +1,31 @@
+name: medical-speech-lab
+
+# Use the existing SagaAgent Caddy container for TLS and public routing.
+# This file starts only the speech API; it does not bind host ports.
+services:
+  api:
+    container_name: medical-speech-lab-api
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 900m
+    cpus: 1
+    pids_limit: 128
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - shared_proxy
+
+networks:
+  shared_proxy:
+    external: true
+    name: saga-agent_default

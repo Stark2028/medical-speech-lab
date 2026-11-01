@@ -97,7 +97,7 @@ If settings change after viewing test results, treat this test as exploratory an
 
 ## Deploy
 
-See [deployment instructions](docs/DEPLOYMENT.md) for Docker Compose, AWS CloudFormation, health checks, updates, and teardown. The standard image bakes in the public pretrained baseline; fine-tuned weights are never pushed to GitHub. The CloudFormation stack incurs ongoing EC2, storage, and public IPv4 charges.
+See [deployment instructions](docs/DEPLOYMENT.md) for Docker Compose, the shared SagaAgent host configuration, the optional dedicated AWS CloudFormation stack, health checks, updates, and teardown. The standard image bakes in the public pretrained baseline; fine-tuned weights are never pushed to GitHub. The shared deployment uses the existing EC2 instance, while a dedicated CloudFormation stack would incur additional EC2, storage, and public IPv4 charges.
 
 ## Repository guide
 
