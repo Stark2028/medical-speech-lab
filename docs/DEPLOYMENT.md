@@ -57,7 +57,7 @@ aws cloudformation delete-stack --region ap-south-1 --stack-name medical-speech-
 
 ## Shared SagaAgent EC2 host
 
-The selected live deployment uses the existing `saga-agent-demo` EC2 instance (`i-038a14281fb8c141c`) and its Caddy proxy. [`shared-compose.yaml`](../deploy/shared-compose.yaml) starts only the speech API on the existing `saga-agent_default` Docker network. It publishes no host ports. The [Caddy site block](../deploy/shared-Caddyfile.block) adds `medical-speech-lab.65.0.103.235.sslip.io` to the existing proxy configuration. The SagaAgent site block is retained.
+The [live demo](https://medical-speech-lab.65.0.103.235.sslip.io/) uses the existing `saga-agent-demo` EC2 instance (`i-038a14281fb8c141c`) and its Caddy proxy. [`shared-compose.yaml`](../deploy/shared-compose.yaml) starts only the speech API on the existing `saga-agent_default` Docker network. It publishes no host ports. The [Caddy site block](../deploy/shared-Caddyfile.block) adds `medical-speech-lab.65.0.103.235.sslip.io` to the host proxy configuration. The SagaAgent and ReorderIQ site blocks are retained.
 
 On the host, clone this repository to `/opt/medical-speech-lab` and pin the intended commit. Check `docker compose -f deploy/shared-compose.yaml config`, then build and start:
 
@@ -67,9 +67,11 @@ docker compose -f deploy/shared-compose.yaml up -d --build
 docker compose -f deploy/shared-compose.yaml ps
 ```
 
-Back up `/opt/saga/deploy/aws/Caddyfile` before appending the new site block. Validate with `docker exec saga-agent-proxy-1 caddy validate --config /etc/caddy/Caddyfile`, then reload with `docker exec saga-agent-proxy-1 caddy reload --config /etc/caddy/Caddyfile`. Verify both the new hostname and the existing SagaAgent hostname after reload. A 2 GB EBS-backed swapfile can protect the 2 GB instance from build-time memory pressure; monitor `docker stats` and `free -m`. The shared API is capped at 900 MB and one CPU. Building the image may temporarily consume CPU and disk.
+The host Caddyfile is `/opt/saga/deploy/aws/Caddyfile`, with a pre-change backup at `/opt/saga/deploy/aws/Caddyfile.before-medical-speech-lab-20261101`. Validate the complete host file with a temporary Caddy container that has `SAGA_DOMAIN` set. **Recreate only the proxy** from `/opt/saga/deploy/aws` using `docker compose up -d --no-deps --force-recreate proxy` after changing the host file. The existing proxy's single-file bind mount can point at an older inode after that file is replaced, so `docker exec ... caddy reload` alone may load stale routes. Recreating the proxy remounts the current file and briefly interrupts HTTPS; it does not recreate the apps. Verify SagaAgent, ReorderIQ, and Medical Speech Lab after the change.
 
-To remove only this demo, remove the new site block from Caddyfile, validate and reload Caddy, then run `docker compose -f deploy/shared-compose.yaml down` in this repository. This keeps SagaAgent and the EC2 instance running. Keep the Caddyfile backup until both sites are healthy.
+A 2 GB EBS-backed swapfile was added to the already provisioned root volume to protect this 2 GB instance from build-time memory pressure. The shared API is capped at 900 MB and one CPU. After a real transcription, it used about 422 MiB, with about 740 MiB host memory available. Monitor `docker stats`, `free -m`, and disk use during updates. The image was built from commit `3f85e15bcd54b2d13879653e039de0ebf09d45ec`. No separate EC2 instance or public IP was created.
+
+To remove only this demo, remove the new site block from the host Caddyfile while preserving the other two routes, validate the complete file, recreate only the proxy as above, and run `docker compose -f deploy/shared-compose.yaml down` in this repository. This keeps SagaAgent, ReorderIQ, and the EC2 instance running. Retain the Caddyfile backup until all sites are healthy. If another deployment replaces the host Caddyfile, reapply the speech block before recreating the proxy.
 
 ## Operational scope
 

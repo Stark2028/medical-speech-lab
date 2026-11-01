@@ -2,7 +2,9 @@
 
 **A reproducible English medical-symptom ASR study with a bounded inference demo.** The repository fine-tunes a pinned Whisper tiny model, compares it with the pretrained baseline on a frozen transcript-disjoint test set, and measures sensitivity to synthetic noise. The web app accepts short recordings and displays the baseline transcript without storing uploads.
 
-> **Research status — 1 November 2026:** full GPU training and the one-time held-out test comparison are complete. The demo, if deployed, serves the **pretrained baseline**; fine-tuned weights remain local. Neither model is clinically validated.
+> **Research status — 1 November 2026:** full GPU training and the one-time held-out test comparison are complete. The live demo serves the **pretrained baseline**; fine-tuned weights remain local. Neither model is clinically validated.
+
+**Live demo:** [medical-speech-lab.65.0.103.235.sslip.io](https://medical-speech-lab.65.0.103.235.sslip.io/) · [API documentation](https://medical-speech-lab.65.0.103.235.sslip.io/docs)
 
 ![Medical Speech Lab demo with audio upload, transcript panel, and measured validation results](docs/demo-desktop.png)
 
@@ -97,7 +99,7 @@ If settings change after viewing test results, treat this test as exploratory an
 
 ## Deploy
 
-See [deployment instructions](docs/DEPLOYMENT.md) for Docker Compose, the shared SagaAgent host configuration, the optional dedicated AWS CloudFormation stack, health checks, updates, and teardown. The standard image bakes in the public pretrained baseline; fine-tuned weights are never pushed to GitHub. The shared deployment uses the existing EC2 instance, while a dedicated CloudFormation stack would incur additional EC2, storage, and public IPv4 charges.
+The [live demo](https://medical-speech-lab.65.0.103.235.sslip.io/) runs on the existing SagaAgent EC2 instance behind its Caddy proxy. See [deployment instructions](docs/DEPLOYMENT.md) for the shared host configuration, health checks, updates, and teardown, as well as an optional dedicated AWS CloudFormation stack. The standard image bakes in the public pretrained baseline; fine-tuned weights are never pushed to GitHub. The shared deployment uses the existing EC2 instance, while a dedicated stack would incur additional EC2, storage, and public IPv4 charges.
 
 ## Repository guide
 
